@@ -256,6 +256,60 @@ A non-illuminated LED does not necessarily mean that the adapter is not working.
 
 Always verify the actual USB enumeration, kernel driver, wireless interface and network connection.
 
+
+## Troubleshooting: USB Stick Not Detected on Reboot (Boot Race Condition)
+
+On modern systems like Debian 13 (Kernel 6.12+), a boot synchronization problem may occur: the USB stick is correctly detected by lsusb (ID 0bda:b711), but the Wi-Fi network interface (wlx...) does not appear in ip link unless you physically unplug and replug the device.
+
+This happens because the module is loaded by the kernel before the USB stick's firmware has completed the post-modeswitch electronics transition.
+
+To permanently resolve this issue automatically on any USB port on your PC, follow these steps to create a dedicated Systemd service that performs a soft reset of the device at boot.
+
+### 1. Remove the module from early loading
+Make sure the module is not present in the /etc/modules file. Open the file:
+```bash
+sudo nano /etc/modules
+```
+If you see the line `8188gu`, delete it, save (`CTRL+O`, `Enter`), and exit (`CTRL+X`).
+
+### 2. Create the automatic restart service
+Create a new service file in Systemd:
+```bash
+sudo nano /etc/systemd/system/rtl8188gu-restart.service
+```
+
+Paste the following configuration block inside:
+```ini
+[Unit]
+Description=Force Hardware Reset and Load RTL8188GU
+After=multi-user.target usb-modeswitch.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# 1. Remove the module to avoid conflicts and zombie states
+ExecStartPre=/sbin/modprobe -r 8188gu
+# 2. Soft reset the USB device (Disable and re-enable authorization)
+ExecStartPre=/bin/sh -c 'for dev in /sys/bus/usb/devices/*; do if [ -f "$dev/idVendor" ] && [ "$(cat $dev/idVendor)" = "0bda" ] && [ "$(cat $dev/idProduct)" = "b711" ]; then echo 0 > "$dev/authorized"; /bin/sleep 2; echo 1 > "$dev/authorized"; fi; done'
+# 3. Wait for USB bus reactivation
+ExecStartPre=/bin/sleep 2
+# 4. Load final driver
+ExecStart=/sbin/modprobe 8188gu
+
+[Install]
+WantedBy=multi-user.target
+```
+Save the file (`CTRL+O`, `Enter`) and exit (`CTRL+X`).
+
+### 3. Enable the service
+Inform Systemd of the change and enable the service so that it starts automatically every time the computer boots:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable rtl8188gu-restart.service
+```
+
+Done! Upon the next reboot, the Unico/Realtek dongle will be reset via software, and the Wi-Fi interface will be active and ready for use from boot, regardless of the USB port it's inserted into.
+
 Kernel compatibility
 
 This repository specifically documents the modifications required for the tested Debian 13 kernel:
