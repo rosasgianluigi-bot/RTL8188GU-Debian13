@@ -357,11 +357,13 @@ No guarantee is made that the driver will work unchanged on every RTL8188GU / RT
 
 Always keep a working network connection available when testing an out-of-tree wireless driver.
 
-Credits
+## Credits and Acknowledgements
 
-Original project:
+This project is a fork updated and adapted for modern Linux kernels. Special thanks to:
 
-McMCCRU/rtl8188gu
+* **[@McMCCRU](https://github.com/McMCCRU)** for the original **[rtl8188gu](https://github.com/McMCCRU/rtl8188gu)** repository, which provided the source code base and initial support for older releases like Ubuntu 20.04.
+
+Without their initial work reverse-engineering and cleaning the Realtek code, it would not have been possible to extend support for this Wi-Fi dongle to current Debian builds.
 
 Additional kernel compatibility work and Debian 13 testing:
 
