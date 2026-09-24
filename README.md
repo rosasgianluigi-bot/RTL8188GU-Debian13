@@ -375,8 +375,11 @@ Debian GNU/Linux 13.7 — Linux 6.12.107
 
 
 Chiavetta UNICO WA2763
+chip Realtek Semiconductor Corp. RTL8188GU 802.11n WLAN Adapter
 
-<img width="1536" height="2048" alt="chiavetta" src="https://github.com/user-attachments/assets/dab20bf4-0cf3-49a4-981a-d487cc8a6e04" />
+<img width="300" height="638" alt="Unicowa2763" src="https://github.com/user-attachments/assets/cbe73a20-87c3-43ba-82c0-2c668a5c70e1" />
+
+
 
 
 
