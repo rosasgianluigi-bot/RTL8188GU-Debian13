@@ -372,3 +372,28 @@ Gianluigi Rosas
 Test platform:
 
 Debian GNU/Linux 13.7 — Linux 6.12.107
+
+
+Chiavetta UNICO WA2763
+
+<img width="1536" height="2048" alt="chiavetta" src="https://github.com/user-attachments/assets/dab20bf4-0cf3-49a4-981a-d487cc8a6e04" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
