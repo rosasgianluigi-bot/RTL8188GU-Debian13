@@ -49,7 +49,8 @@ The resulting kernel module is:
 
 The adapter can be detected as an RTL8710B/RTL8188GU device and can create a wireless network interface.
 
-A working wireless connection was verified with NetworkManager.
+A working wireless connection was verified with NetworkManager during testing.
+The available kernel logs do not establish that this connection was handled exclusively by the custom 8188gu module.
 
 Example interface:
 
@@ -272,8 +273,9 @@ USB mode switching to 0BDA:B711.
 RTL8710B firmware initialization.
 Wireless interface creation.
 Wireless network detection.
-NetworkManager connection.
-Successful Wi-Fi operation on Debian 13.
+NetworkManager connection was successfully tested.
+The adapter was successfully used for Wi-Fi on Debian 13; the documented logs do not establish exclusive use of the custom 8188gu module for that connection.
+
 Backup
 
 A complete local backup of the working environment was created separately from this Git repository.
