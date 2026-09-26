@@ -200,84 +200,149 @@ Commit message:
 
 Fixed the build for Debian 13 kernel 6.12.
 
+## Build and Installation
+
 Installs the required build tools and kernel header files.
 
 For a Debian system using the currently running kernel:
 
+
 sudo apt install build-essential linux-headers-$(uname -r)
+
 
 Clone this repository and access the source directory:
 
-git clone https://github.com/rosasgianluigi-bot/RTL8188GU-Debian13.git cd RTL8188GU-Debian13
 
-Compile:
+git clone https://github.com/rosasgianluigi-bot/RTL8188GU-RTL8710BU-Debian13.git
+cd RTL8188GU-RTL8710BU-Debian13
+
+
+Compile the driver:
 
 make
 
-Install:
+Install the compiled module:
 
 sudo make install
 
-After installation, update the module's dependency database with the command:
+After installation, update the module dependency database:
+
 
 sudo depmod -a
 
-Then reconnect the USB adapter or reinstall the driver, depending on your system's needs.
+Then reconnect the USB adapter or reload the driver, depending on the current system state.
 
-USB Device Verification
+## USB Device Verification
 
-Verify that the adapter is visible with the command:
+Verify that the adapter is detected by the USB subsystem:
+
 
 lsusb
 
-The expected device ID is:
+
+The expected USB device ID is:
+
 
 0bda:b711
 
-You can also verify the USB driver association with:
 
-lsusb -t Check Wireless Interface
+The adapter may initially appear as:
 
-List wireless interfaces:
+0bda:1a2b
+
+and then switch to:
+
+0bda:b711
+
+after USB mode switching.
+
+### USB Driver Association
+
+To verify which USB driver is associated with the device:
+
+lsusb -t
+
+Look for the wireless adapter and its associated kernel driver.
+
+### Wireless Interface
+
+List the available wireless interfaces:
+
 
 iw dev
 
-O:
+
+or:
 
 ip link
 
-IW development
 
-O:
+After successful initialization, a wireless interface should appear.
 
-IP ​​link
+The interface name may be generated from the adapter's MAC address, for example:
 
 
-Once the adapter has been successfully initialized, a wireless interface should appear.
+wlxXXXXXXXXXXXX
 
-The interface name can be generated from the adapter's MAC address, for example:
 
-wlxXXXXXXXXXXXX NetworkManager
+The actual interface name depends on the USB adapter's MAC address.
 
-If NetworkManager is installed, available Wi-Fi networks can be listed with:
+### NetworkManager
+
+If NetworkManager is installed, check the device status:
+
+
+nmcli device status
+
+
+Available Wi-Fi networks can be listed with:
+
 
 nmcli device wifi list
 
-To connect:
+
+To connect to a network:
 
 nmcli --ask device wifi connect "YOUR_WIFI_NAME" ifname YOUR_WIFI_INTERFACE
 
-The --ask option allows NetworkManager to prompt for the Wi-Fi password without having to enter it on the command line or in this documentation.
 
-Firmware
+The `--ask` option allows NetworkManager to request the Wi-Fi password interactively without storing the password in the command line or in this documentation.
 
-The RTL8710B platform uses firmware associated with the RTL8710B/RTL8188GU device family.
+### Basic Verification Sequence
 
-The Linux rtl8xxxu driver uses firmware files such as:
+A simple verification sequence is:
 
-rtlwifi/rtl8710bufw_SMIC.bin rtlwifi/rtl8710bufw_UMC.bin
+lsusb
+lsusb -t
+iw dev
+ip link
+nmcli device status
 
-This repository also contains the RTL8710B firmware data embedded in the driver source code.
+These checks verify the USB enumeration, kernel driver association, wireless interface creation, and NetworkManager device status independently of the physical LED.
+
+
+## Firmware
+
+The RTL8710B platform uses firmware associated with the RTL8710B / RTL8188GU device family.
+
+The Linux `rtl8xxxu` driver uses firmware files such as:
+
+
+rtlwifi/rtl8710bufw_SMIC.bin
+rtlwifi/rtl8710bufw_UMC.bin
+
+
+During testing on Debian 13, the firmware file loaded by `rtl8xxxu` was:
+
+
+rtlwifi/rtl8710bufw_SMIC.bin
+
+The firmware was successfully loaded by the kernel during adapter initialization.
+
+This repository also contains RTL8710B firmware data embedded in the driver source code.
+
+**Important:** The firmware is separate from the Linux driver source code and should be treated separately for licensing and redistribution purposes.
+
 
 Firmware License
 
@@ -295,24 +360,57 @@ A community-maintained driver based on Realtek-derived source code; it is not an
 
 Firmware should be treated separately from the driver source code for licensing and redistribution purposes.
 
-Notes on switching USB modes
+## Notes on Switching USB Modes
 
-Some adapters based on this hardware initially present themselves as USB storage/CD-ROM devices:
+Some adapters based on this hardware may initially present themselves as a USB storage or CD-ROM device.
+
+The initial USB identification may be:
+
 
 0BDA:1A2B
 
-After enabling USB mode, the wireless function becomes:
+
+After the USB mode is switched, the wireless adapter may appear as:
+
 
 0BDA:B711
 
-If the wireless device does not appear, checking the lsusb command before and after switching USB modes may help identify the problem.
 
-A dark LED does not necessarily mean the adapter is not working.
+This mode switching can be handled by `usb-modeswitch`, depending on the device and system configuration.
 
-Always check the actual USB port enumeration, kernel driver, wireless interface, and network connection.
+To check the current USB identification:
 
-<<<<<<< HEAD
-Troubleshooting: USB initialization problems after reboot
+lsusb
+
+If the adapter is initially listed as `0BDA:1A2B`, wait briefly and check again after the mode-switching process:
+
+
+lsusb
+
+
+The expected wireless-device identification is:
+
+
+0BDA:B711
+
+
+If the wireless device does not appear, check the USB enumeration and kernel messages before making any driver changes.
+
+For example:
+
+
+lsusb
+
+
+and:
+
+dmesg | tail -n 50
+
+
+A dark LED does not necessarily indicate that the adapter has failed.
+
+Always verify the actual USB enumeration, kernel driver association, wireless interface, and network connectivity independently of the physical LED.
+
 
 Before creating custom reset services, verify USB authorization and USB security tools.
 
@@ -373,45 +471,114 @@ If the problem persists after checking USB authorization settings, a systemd res
 The exact cause may depend on USB controller timing, device firmware initialization,
 or system USB authorization policies.
 
-Troubleshooting: USB stick not detected on reboot (boot race condition)
+Troubleshooting
+USB adapter detected but wireless interface is missing after reboot
 
-On modern systems such as Debian 13 (Kernel 6.12+), a synchronization problem may occur at boot: the USB stick is correctly detected by lsusb (ID 0bda:b711), but the Wi-Fi network interface (wlx...) does not appear in ip link unless you physically unplug and replug the device.
+On the tested Debian 13 system, the USB adapter could be detected correctly after boot with:
 
-This happens because the module is loaded by the kernel before the USB stick's firmware has completed the electronic transition following the mode change.
+lsusb
 
-To automatically and permanently resolve this issue on any USB port on your PC, follow these steps to create a dedicated Systemd service that performs a soft reboot of the device at boot.
+showing:
 
-1. Remove the module from preload
-Make sure the module is not present in the /etc/modules file. Open the file:
+0bda:b711
 
-sudo nano /etc/modules
-If you see the 8188gu line, delete it, save (CTRL+O, Enter), and exit (CTRL+X).
+while the wireless interface was not initially present in:
 
-2. Create the automatic restart service
-Create a new service file in Systemd:
+ip link
 
-sudo nano /etc/systemd/system/rtl8188gu-restart.service
+The problem was related to USB device initialization during the boot process.
 
-<img width="1168" height="315" alt="restart" src="https://github.com/user-attachments/assets/94b8a9df-e50e-4dc1-8ed7-a067256eb5f6" />
+Check USB authorization
 
-Save the file (CTRL+O, Enter) and exit (CTRL+X).
+If the adapter appears in lsusb but no wireless interface is created, check whether the USB device is authorized:
 
-3. Enable the service
-Inform Systemd of the change and enable the service so that it starts automatically every time the computer is turned on:
+cat /sys/bus/usb/devices/2-4/authorized
 
-From the terminal:
+The device path can be different on another system. Use the actual USB device path shown by the system.
 
-sudo systemctl daemon-reload
+If the result is:
 
-sudo systemctl enable rtl8188gu-restart.service
+0
 
-<<<<<<< HEAD
-After the next reboot, the Unico/Realtek dongle will be reinitialized by the service,
-and the Wi-Fi interface should become available automatically.
+the USB device has been detected but is not authorized.
 
-Done! Upon the next reboot, the Unico/Realtek dongle will be soft-reset, and the Wi-Fi interface will be active and ready for use right from the start, regardless of the USB port it's plugged into.
+To authorize the device manually:
 
-Kernel Compatibility
+echo 1 | sudo tee /sys/bus/usb/devices/2-4/authorized
+
+After authorization, check:
+
+ip link
+
+and:
+
+iw dev
+
+On the tested system, authorizing the USB device caused the wireless interface to appear.
+
+USBGuard
+
+USBGuard was also checked during the investigation.
+
+To verify its state:
+
+systemctl is-enabled usbguard
+
+and:
+
+systemctl is-active usbguard
+
+If USBGuard is not intentionally used on the system, it should not be assumed to be the cause of the problem. Check its state before making configuration changes.
+
+udev USB authorization rule
+
+A udev rule was tested to automatically authorize USB devices:
+
+/etc/udev/rules.d/01-usb-allow-all.rules
+
+with:
+
+SUBSYSTEM=="usb", ACTION=="add", ENV{DEVTYPE}=="usb_device", ATTR{authorized}="1"
+
+The rule can be inspected with:
+
+cat /etc/udev/rules.d/01-usb-allow-all.rules
+
+The rule was verified with udevadm, but note that udevadm test operates in test mode and does not itself write the resulting value to the device's authorized attribute.
+
+After changing udev rules, reload the rules:
+
+sudo udevadm control --reload-rules
+
+and:
+
+sudo udevadm trigger
+
+Then reconnect the adapter or reboot and verify:
+
+lsusb
+ip link
+iw dev
+Important
+
+The exact USB device path, for example:
+
+2-4
+
+is system-dependent and must not be assumed to be identical on another computer.
+
+The diagnostic sequence should therefore be:
+
+lsusb
+ip link
+iw dev
+ls /sys/bus/usb/devices/
+
+and then inspect the authorized attribute of the corresponding USB device.
+
+No custom systemd reset service is required as part of the documented configuration.
+
+The tested system was successfully able to initialize the adapter after boot without requiring a physical unplug/replug operation.
 
 This repository specifically documents the changes required for the tested Debian 13 kernel:
 
@@ -434,30 +601,77 @@ The backup contains:
 Driver source code; Git history; firmware files used during testing; installed kernel module; recompiled kernel module; system information; checksum; documentation.
 
 The backup is intentionally kept separate from the public Git repository.
+Kernel Compatibility
+
+This repository specifically documents the changes required for the tested Debian 13 kernel:
+
+6.12.107+deb13-amd64
+
+Other kernel versions may require additional changes.
+
+Verification Summary
+
+The documented configuration was verified through the following steps:
+
+USB device enumeration.
+USB mode switching to 0BDA:B711.
+RTL8710B firmware initialization.
+Creation of the wireless interface.
+Detection of available Wi-Fi networks.
+Successful connection using NetworkManager.
+Successful use of the adapter for Wi-Fi on Debian 13.
+
+The available test logs do not establish that the successful network connection was managed exclusively by the custom 8188gu module. Depending on kernel configuration and driver priority, the device may instead be handled by the in-tree rtl8xxxu driver.
+
+Backup
+
+A complete local backup of the working environment was created separately from this Git repository.
+
+The backup contains, where applicable:
+
+driver source code;
+Git history;
+firmware files used during testing;
+installed kernel module;
+recompiled kernel module;
+system information;
+checksums;
+documentation.
+
+The backup is intentionally kept separate from the public Git repository.
 
 Disclaimer
 
 This repository is provided as technical documentation of a working configuration.
 
-Hardware revisions, firmware revisions, kernel versions, and distribution configurations may vary from system to system.
+Hardware revisions, firmware revisions, kernel versions, USB controllers, and distribution configurations may vary from system to system.
 
-There is no guarantee that the driver will work without modification on all RTL8188GU/RTL8710BU devices.
+There is no guarantee that the driver will work without modification on all RTL8188GU / RTL8710BU devices.
 
-When testing a wireless driver outside of the installation package, you must always have a working network connection.
+When testing a wireless driver or changing network configuration, always make sure that an alternative working network connection is available when possible.
 
 Credits and Acknowledgements
-This project is a fork updated and adapted to modern Linux kernels. Special thanks to:
 
-Thanks to @McMCCRU for the original rtl8188gu repository, which provided the source code and initial support for older releases such as Ubuntu 20.04.
-Without their initial work reverse engineering and cleaning the Realtek code, it would not have been possible to extend support for this Wi-Fi dongle to current Debian releases.
+This project is based on the work contained in the original rtl8188gu project by McMCCRU and has been adapted and tested for modern Linux kernels.
+
+Special thanks to:
+
+@McMCCRU
+
+for the original rtl8188gu repository, which provided the source code and initial support for older Linux releases.
 
 Further kernel compatibility work and testing on Debian 13:
 
 Gianluigi Rosas
 
-Test Platform:
-
-Debian GNU/Linux 13.7 — Linux 6.12.107
+Test Platform
+Operating System: Debian GNU/Linux 13.7
+Kernel: 6.12.107+deb13-amd64
+Desktop: KDE Plasma
+Adapter: UNICO WA2763
+Chip: Realtek RTL8188GU / RTL8710BU
+USB ID: 0BDA:B711
+Wi-Fi: 802.11n, 2.4 GHz
 
 UNICO WA2763 chip Realtek Semiconductor Corp. RTL8188GU 802.11n WLAN adapter
 
