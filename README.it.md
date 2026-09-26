@@ -176,7 +176,7 @@ sudo apt install build-essential linux-headers-$(uname -r)
 
 Clona questo repository e accedi alla directory dei sorgenti:
 
-git clonehttps://github.com/rosasgianluigi-bot/RTL8188GU-Debian13.git cd RTL8188GU-Debian13
+git clone https://github.com/rosasgianluigi-bot/RTL8188GU-Debian13.git cd RTL8188GU-Debian13
 
 Compilare:
 
