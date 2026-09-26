@@ -1,145 +1,154 @@
-Wi-Fi USB RTL8188GU / RTL8710BU su Debian 13
+# RTL8188GU / RTL8710BU USB Wi-Fi on Debian 13
 
-I driver Linux funzionano per l'adattatore Wi-Fi USB Realtek RTL8188GU / RTL8710BU con ID USB:
+RTL8188GU / RTL8710BU USB Wi-Fi on Debian 13
+
+The Linux drivers work for the Realtek RTL8188GU / RTL8710BU USB Wi-Fi adapter with USB ID:
 
 0BDA:B711
 
-Questo repository documenta una configurazione funzionante testata su Debian 13 con il kernel della serie Debian 6.12.
+This repository documents a working configuration tested on Debian 13 with the Debian 6.12 series kernel.
 
-Importante: questo non è un driver Realtek originale. Il progetto si basa su codice sorgente derivato da altri driver Realtek. Le note originali sul copyright e sulla licenza contenute nei file sorgente sono state mantenute.
+Important: This is not an original Realtek driver. The project is based on source code derived from other Realtek drivers. The original copyright and license notices contained in the source files have been retained.
 
-Famiglia di chip hardware: Realtek RTL8710B / RTL8188GU ID fornitore USB: 0BDA ID prodotto USB: B711 Descrizione USB: Adattatore WLAN 802.11n Bus: USB 2.0 Wi-Fi: 802.11n, 2,4 GHz Architettura: 1T1R
+Hardware Chip Family: Realtek RTL8710B / RTL8188GU USB Vendor ID: 0BDA USB Product ID: B711 USB Description: 802.11n WLAN Adapter Bus: USB 2.0 Wi-Fi: 802.11n, 2.4 GHz Architecture: 1T1R
 
-L'adattatore potrebbe inizialmente essere enumerato come:
+The adapter may initially be listed as:
 
 0BDA:1A2B
 
-e poi passare a:
+and then change to:
 
 0BDA:B711
 
-tramite usb-modeswitch.
+via usb-modeswitch.
 
-Sistema verificato
+Tested System
 
-La configurazione qui documentata è stata testata su:
+The configuration documented here was tested on:
 
-Sistema operativo: Debian GNU/Linux 13.7 (trixie) Kernel: 6.12.107+deb13-amd64 GCC: 14.2.0 Architettura: x86_64 Desktop: KDE Plasma
+Operating System: Debian GNU/Linux 13.7 (trixie) Kernel: 6.12.107+deb13-amd64 GCC: 14.2.0 Architecture: x86_64 Desktop: KDE Plasma
 
-I file di intestazione del kernel utilizzati per la compilazione corrispondevano a quelli del kernel in esecuzione.
+The kernel header files used for compilation matched those of the running kernel.
 
-Risultato
+Result
 
-Il codice sorgente del driver è stato adattato e compilato con successo per il kernel 6.12 di Debian 13.
+The driver source code was successfully adapted and compiled for the Debian 13 6.12 kernel.
 
-Il modulo kernel risultante è:
+The resulting kernel module is:
 
 8188gu.ko
 
-L'adattatore può essere rilevato come un dispositivo RTL8710B/RTL8188GU e può creare un'interfaccia di rete wireless.
+The adapter can be detected as an RTL8710B/RTL8188GU device and can create a wireless network interface.
 
-Durante i test è stata verificata una connessione wireless funzionante tramite NetworkManager. I log del kernel disponibili non indicano che questa connessione sia stata gestita esclusivamente dal modulo personalizzato 8188gu.
+During testing, a working wireless connection was verified using NetworkManager. Available kernel logs do not indicate that this connection was managed exclusively by the custom 8188gu module.
 
-Esempio di interfaccia:
+Interface Example:
 
 wlxXXXXXXXXXXXX
 
 <img width="505" height="47" alt="nmcli device" src="https://github.com/user-attachments/assets/b7d25f36-914c-4b66-a417-7ed3cdfa4f91" />
 
+The actual interface name depends on the USB adapter's MAC address.
 
+LED Behavior
 
+The RTL8188GU USB adapter can function properly even without LED activity.
 
+Therefore, LED activity should not be used as the sole indicator of proper Wi-Fi adapter operation.
 
+The analysis of the determining factors revealed the following:
 
+CONFIG_RTW_SW_LED is enabled in the driver configuration.
 
+The LED framework has been successfully initialized.
 
+The compilation calls SwLedOn_8710BU() and SwLedOff_8710BU(), but does not write it.
 
+However, in the current RTL8710B USB implementation, these functions only update the internal LED state (bLedOn) and do not perform hardware writes to the LED registers/GPIOs.
 
-Il nome effettivo dell'interfaccia dipende dall'indirizzo MAC dell'adattatore USB.
+Therefore:
 
-Comportamento del LED
+a missing solid-state LED;
 
-L'adattatore USB RTL8188GU può funzionare correttamente anche in assenza di attività LED.
+a missing blinking LED during traffic;
 
-Pertanto l'attività del LED non deve essere utilizzata come unica indicazione del corretto funzionamento dell'adattatore Wi-Fi.
+no LED activity after connection.
 
-Durante l'analisi dei fattori determinanti è emerso che:
+This should not be considered evidence of a driver or hardware failure.
 
-CONFIG_RTW_SW_LED è abilitato nella configurazione del driver.
+The adapter can be fully detected, managed by the driver, connected to a WiFi network, and function normally without any visible LED indication.
 
-Il framework LED è stato inizializzato correttamente.
+Use the lsusb, iw dev, ip link, and NetworkManager commands to verify operation.
 
-La compilazione chiama SwLedOn_8710BU()e SwLedOff_8710BU(), ma senza scriverla
+Original Project
 
-Tuttavia, nell'attuale implementazione USB dell'RTL8710B, queste funzioni aggiornano solo lo stato interno del LED ( bLedOn) e non eseguono scritture hardware nei registri/GPIO del LED.
-
-Perciò:
-
-un LED a stato solido mancante;
-
-un LED lampeggiante mancante durante il traffico;
-
-nessuna attività del LED dopo la connessione
-
-Non deve essere considerato di per sé una prova di un guasto del driver o dell'hardware.
-
-L'adattatore può essere completamente rilevato, gestito dal driver, connesso a una rete WiFi e funzionare normalmente senza alcuna indicazione LED visibile.
-
-Utilizzare i comandi lsusb, iw dev, ip link e NetworkManager per verificare il funzionamento.
-
-Progetto originale
-
-Il punto di partenza di questo lavoro è:
+The starting point of this work is:
 
 McMCCRU/rtl8188gu
 
-Il progetto originale identifica il dispositivo come:
+The original project identifies the device as:
 
 RTL8188GU (RTL8710B) — VID:PID 0x0BDA:0xB711
 
-Il repository originale non conteneva un file LICENSE separato. I suoi file sorgente contengono le note originali sul copyright e sulla licenza GPLv2, ove applicabile.
+The original repository did not contain a separate LICENSE file. Its source files contain the original copyright notices and the GPLv2 license, where applicable.
 
-Questo repository conserva quindi i file sorgente originali e le relative intestazioni di copyright/licenza.
+This repository therefore preserves the original source files and their copyright/license headers.
 
-Correzioni per Debian 13 / Kernel 6.12
+Fixes for Debian 13 / Kernel 6.12
 
-Il codice sorgente originale necessitava di modifiche per essere compilato correttamente con gli header del kernel 6.12 di Debian 13.
+The original source code needed modifications to compile correctly with the Debian 13 6.12 kernel headers.
 
-I seguenti file sono stati modificati.
+The following files have been modified.
 
 os_dep/linux/ioctl_cfg80211.c
 
 cfg80211_rtw_change_beacon
 
-Il parametro della funzione è stato aggiornato da:
+The function parameter was updated from:
 
 struct cfg80211_beacon_data *info
 
-A:
+To:
 
 struct cfg80211_ap_update *info
 
-Di conseguenza, i riferimenti ai dati del beacon sono stati aggiornati da:
+As a result, the beacon data references were updated from:
 
-info->testa info->lunghezza_testa info->coda info->lunghezza_coda
+info->head info->head_length info->tail info->tail_length
 
-A:
+To:
 
 info->beacon.head info->beacon.head_len info->beacon.tail info->beacon.tail_len 2. cfg80211_rtw_set_monitor_channel
 
-L'API del kernel corrente richiede il parametro del dispositivo di rete:
+The current kernel API requires the network device parameter:
 
 struct net_device *ndev
 
-Prima:
+Before:
 
 struct cfg80211_chan_def *chandef
 
-La dichiarazione della funzione è stata aggiornata di conseguenza.
+The function declaration has been updated accordingly.
 
 os_dep/linux/usb_intf.c
 
-La funzione di callback per la chiusura del driver USB è stata aggiornata da:
+The USB driver shutdown callback function has been updated from:
+
+.usbdrv.drvwrap.driver.shutdown = rtw_dev_shutdown,
+
+To:
+
+.usbdrv.driver.shutdown = rtw_dev_shutdown,
+
+These changes are included in the commit:
+
+220e7561cb0690ffc2352cdc0bfd80112ea04e6d
+
+Commit message:
+
+Fixed the build for Debian 13 kernel 6.12.
+
+The USB driver shutdown callback function has been updated from:
 
 .usbdrv.drvwrap.driver.shutdown = rtw_dev_shutdown,
 
@@ -147,224 +156,201 @@ A:
 
 .usbdrv.driver.shutdown = rtw_dev_shutdown,
 
-Queste modifiche sono incluse nel commit:
+These changes are included in the commit:
 
 220e7561cb0690ffc2352cdc0bfd80112ea04e6d
 
-Messaggio di commit:
+Commit message:
 
-Correzione della build per il kernel 6.12 di Debian 13.
+Fixed the build for Debian 13 kernel 6.12.
 
+Installs the required build tools and kernel header files.
 
-Installa gli strumenti di compilazione e i file di intestazione del kernel necessari.
-
-Per un sistema Debian che utilizza il kernel attualmente in esecuzione:
+For a Debian system using the currently running kernel:
 
 sudo apt install build-essential linux-headers-$(uname -r)
 
-Clona questo repository e accedi alla directory dei sorgenti:
+Clone this repository and access the source directory:
 
-git clonehttps://github.com/rosasgianluigi-bot/RTL8188GU-Debian13.git cd RTL8188GU-Debian13
+git clone https://github.com/rosasgianluigi-bot/RTL8188GU-Debian13.git cd RTL8188GU-Debian13
 
-Compilare:
+Compile:
 
 make
 
-Installare:
+Install:
 
 sudo make install
 
-Dopo l'installazione, aggiornare il database delle dipendenze del modulo con il comando:
+After installation, update the module's dependency database with the command:
 
 sudo depmod -a
 
-Quindi ricollega l'adattatore USB o reinstalla il driver, a seconda delle esigenze del sistema.
+Then reconnect the USB adapter or reinstall the driver, depending on your system's needs.
 
-Verifica del dispositivo USB
+USB Device Verification
 
-Verifica che l'adattatore sia visibile con il comando:
+Verify that the adapter is visible with the command:
 
 lsusb
 
-L'ID del dispositivo previsto è:
+The expected device ID is:
 
 0bda:b711
 
-È inoltre possibile verificare l'associazione del driver USB con:
+You can also verify the USB driver association with:
 
-lsusb -t Controllo dell'interfaccia wireless
+lsusb -t Check Wireless Interface
 
-Elenca le interfacce wireless:
+List wireless interfaces:
 
-sviluppo IW
+IW development
 
 O:
 
-collegamento IP
+IP ​​link
 
-Una volta che l'adattatore è stato inizializzato correttamente, dovrebbe comparire un'interfaccia wireless.
+Once the adapter has been successfully initialized, a wireless interface should appear.
 
-Il nome dell'interfaccia può essere generato dall'indirizzo MAC dell'adattatore, ad esempio:
+The interface name can be generated from the adapter's MAC address, for example:
 
 wlxXXXXXXXXXXXX NetworkManager
 
-Se NetworkManager è installato, le reti Wi-Fi disponibili possono essere elencate con:
+If NetworkManager is installed, available Wi-Fi networks can be listed with:
 
-Elenco dispositivi wifi nmcli
+nmcli Wi-Fi Device List
 
-Per connettersi:
+To connect:
 
 nmcli --ask device wifi connect "YOUR_WIFI_NAME" ifname YOUR_WIFI_INTERFACE
 
-L'opzione --ask consente a NetworkManager di richiedere la password Wi-Fi senza doverla inserire nella riga di comando o in questa documentazione.
+The --ask option allows NetworkManager to prompt for the Wi-Fi password without having to enter it on the command line or in this documentation.
 
 Firmware
 
-La piattaforma RTL8710B utilizza un firmware associato alla famiglia di dispositivi RTL8710B/RTL8188GU.
+The RTL8710B platform uses firmware associated with the RTL8710B/RTL8188GU device family.
 
-Il driver Linux rtl8xxxu utilizza file firmware come:
+The Linux rtl8xxxu driver uses firmware files such as:
 
 rtlwifi/rtl8710bufw_SMIC.bin rtlwifi/rtl8710bufw_UMC.bin
 
-Questo repository contiene anche i dati del firmware RTL8710B incorporati nel codice sorgente del driver.
+This repository also contains the RTL8710B firmware data embedded in the driver source code.
 
-Licenza del firmware
+Firmware License
 
-La licenza del firmware è separata dalla licenza del codice sorgente del driver.
+The firmware license is separate from the driver source code license.
 
-Questo repository non garantisce in modo assoluto che i file binari del firmware siano rilasciati sotto licenza GPL. Gli utenti sono tenuti a verificare i termini di licenza applicabili forniti dal produttore/fornitore prima di ridistribuire il firmware separatamente.
+This repository does not absolutely guarantee that the firmware binaries are released under the GPL license. Users are advised to verify the applicable license terms provided by the manufacturer/vendor before redistributing the firmware separately.
 
-Origine e provenienza del firmware
+Firmware Origin and Provenance
 
-Il codice sorgente del driver contiene avvisi di copyright di Realtek e riferimenti alla licenza GPLv2 nei singoli file sorgente.
+The driver source code contains Realtek copyright notices and references to the GPLv2 license in the individual source files.
 
-Il progetto va quindi inteso come:
+The project should therefore be considered:
 
-Un driver gestito dalla comunità e basato su codice sorgente derivato da Realtek; non è una distribuzione ufficiale di driver Realtek; modificato per la compilazione con le API del kernel Debian 13 / Linux 6.12; con copyright e note di licenza originali del codice sorgente preservati.
+A community-maintained driver based on Realtek-derived source code; it is not an official Realtek driver distribution; Modified to compile with the Debian 13 / Linux 6.12 kernel APIs; with the original source code copyright and license notices preserved.
 
-Il firmware deve essere trattato separatamente dal codice sorgente del driver per quanto riguarda le licenze e la ridistribuzione.
+Firmware should be treated separately from the driver source code for licensing and redistribution purposes.
 
-Considerazioni note sulla commutazione della modalità USB
+Notes on switching USB modes
 
-Alcuni adattatori basati su questo hardware inizialmente si presentano come dispositivi di archiviazione/CD-ROM USB:
+Some adapters based on this hardware initially present themselves as USB storage/CD-ROM devices:
 
 0BDA:1A2B
 
-Dopo aver attivato la modalità USB, la funzione wireless diventa:
+After enabling USB mode, the wireless function becomes:
 
 0BDA:B711
 
-Se il dispositivo wireless non viene visualizzato, controllare il comando lsusb prima e dopo il cambio di modalità USB può aiutare a identificare il problema.
+If the wireless device does not appear, checking the lsusb command before and after switching USB modes may help identify the problem.
 
-Un LED spento non significa necessariamente che l'adattatore non funzioni.
+A dark LED does not necessarily mean the adapter is not working.
 
-Verificare sempre l'effettiva enumerazione delle porte USB, il driver del kernel, l'interfaccia wireless e la connessione di rete.
+Always check the actual USB port enumeration, kernel driver, wireless interface, and network connection.
 
-Risoluzione dei problemi: Chiavetta USB non rilevata al riavvio (condizione di gara all'avvio)
+Troubleshooting: USB stick not detected on reboot (boot race condition)
 
-Sui sistemi moderni come Debian 13 (Kernel 6.12+), potrebbe verificarsi un problema di sincronizzazione all'avvio: la chiavetta USB viene rilevata correttamente da lsusb (ID 0bda:b711), ma l'interfaccia di rete Wi-Fi (wlx...) non compare in ip link a meno che non si scolleghi e ricolleghi fisicamente il dispositivo.
+On modern systems such as Debian 13 (Kernel 6.12+), a synchronization problem may occur at boot: the USB stick is correctly detected by lsusb (ID 0bda:b711), but the Wi-Fi network interface (wlx...) does not appear in ip link unless you physically unplug and replug the device.
 
-Ciò accade perché il modulo viene caricato dal kernel prima che il firmware della chiavetta USB abbia completato la transizione elettronica successiva al cambio di modalità.
+This happens because the module is loaded by the kernel before the USB stick's firmware has completed the electronic transition following the mode change.
 
-Per risolvere automaticamente e in modo permanente questo problema su qualsiasi porta USB del PC, segui questi passaggi per creare un servizio Systemd dedicato che esegua un riavvio software del dispositivo all'avvio.
+To automatically and permanently resolve this issue on any USB port on your PC, follow these steps to create a dedicated Systemd service that performs a soft reboot of the device at boot.
 
-1. Rimuovere il modulo dal caricamento anticipato
-Assicurati che il modulo non sia presente nel file /etc/modules. Apri il file:
+1. Remove the module from preload
+Make sure the module is not present in the /etc/modules file. Open the file:
 
 sudo nano /etc/modules
-Se vedi la riga 8188gu, cancellala, salva ( CTRL+O, Enter), ed esci ( CTRL+X).
+If you see the 8188gu line, delete it, save (CTRL+O, Enter), and exit (CTRL+X).
 
-2. Creare il servizio di riavvio automatico
-Crea un nuovo file di servizio in Systemd:
+2. Create the automatic restart service
+Create a new service file in Systemd:
 
 sudo nano /etc/systemd/system/rtl8188gu-restart.service
 
-<img width="1168" height="315" alt="riavvio" src="https://github.com/user-attachments/assets/94b8a9df-e50e-4dc1-8ed7-a067256eb5f6" />
+<img width="1168" height="315" alt="restart" src="https://github.com/user-attachments/assets/94b8a9df-e50e-4dc1-8ed7-a067256eb5f6" />
 
-Salva il file ( CTRL+O, Enter) ed esci ( CTRL+X).
+Save the file (CTRL+O, Enter) and exit (CTRL+X).
 
-3. Abilita il servizio
-Informa Systemd della modifica e abilita il servizio in modo che si avvii automaticamente ogni volta che il computer viene acceso:
+3. Enable the service
+Inform Systemd of the change and enable the service so that it starts automatically every time the computer is turned on:
 
-dal terminale:
+From the terminal:
 
 sudo systemctl daemon-reload
 
 sudo systemctl enable rtl8188gu-restart.service
 
-Fatto! Al successivo riavvio, la chiavetta Unico/Realtek verrà ripristinata tramite software e l'interfaccia Wi-Fi sarà attiva e pronta all'uso fin dall'avvio, indipendentemente dalla porta USB in cui è inserita.
+Done! Upon the next reboot, the Unico/Realtek dongle will be soft-reset, and the Wi-Fi interface will be active and ready for use right from the start, regardless of the USB port it's plugged into.
 
-Compatibilità del kernel
+Kernel Compatibility
 
-Questo repository documenta nello specifico le modifiche necessarie per il kernel Debian 13 testato:
+This repository specifically documents the changes required for the tested Debian 13 kernel:
 
 6.12.107+deb13-amd64
 
-Altre versioni del kernel potrebbero richiedere ulteriori modifiche.
+Other kernel versions may require additional changes.
 
-Riepilogo della verifica
+Verification Summary
 
-La configurazione documentata è stata verificata attraverso le seguenti fasi:
+The documented configuration was verified through the following steps:
 
-Enumerazione del dispositivo USB. Commutazione della modalità USB su 0BDA:B711. Inizializzazione del firmware RTL8710B. Creazione dell'interfaccia wireless. Rilevamento della rete wireless. La connessione a NetworkManager è stata testata con successo. L'adattatore è stato utilizzato con successo per il Wi-Fi su Debian 13; i log documentati non indicano l'uso esclusivo del modulo personalizzato 8188gu per tale connessione.
+USB device enumeration. Switching USB mode to 0BDA:B711. Initializing the RTL8710B firmware. Creating the wireless interface. Detecting the wireless network. Connection to NetworkManager was successfully tested. The adapter was successfully used for Wi-Fi on Debian 13; the documented logs do not indicate exclusive use of the custom 8188gu module for this connection.
 
 Backup
 
-È stato creato un backup locale completo dell'ambiente di lavoro separatamente da questo repository Git.
+A complete local backup of the working environment was created separately from this Git repository.
 
-Il backup contiene:
+The backup contains:
 
-Codice sorgente del driver; cronologia Git; file del firmware utilizzati durante i test; modulo del kernel installato; modulo del kernel ricompilato; informazioni di sistema; checksum; documentazione.
+Driver source code; Git history; firmware files used during testing; installed kernel module; recompiled kernel module; system information; checksum; documentation.
 
-Il backup viene volutamente mantenuto separato dal repository Git pubblico.
+The backup is intentionally kept separate from the public Git repository.
 
 Disclaimer
 
-Questo repository è fornito come documentazione tecnica di una configurazione funzionante.
+This repository is provided as technical documentation of a working configuration.
 
-Le revisioni hardware, le revisioni del firmware, le versioni del kernel e le configurazioni della distribuzione possono variare da un sistema all'altro.
+Hardware revisions, firmware revisions, kernel versions, and distribution configurations may vary from system to system.
 
-Non viene fornita alcuna garanzia che il driver funzioni senza modifiche su tutti i dispositivi RTL8188GU / RTL8710BU.
+There is no guarantee that the driver will work without modification on all RTL8188GU/RTL8710BU devices.
 
-Quando si testa un driver wireless esterno al pacchetto di installazione, è sempre necessario disporre di una connessione di rete funzionante.
+When testing a wireless driver outside of the installation package, you must always have a working network connection.
 
-Crediti e ringraziamenti
-Questo progetto è un fork aggiornato e adattato ai moderni kernel Linux. Un ringraziamento speciale a:
+Credits and Acknowledgements
+This project is a fork updated and adapted to modern Linux kernels. Special thanks to:
 
-Un ringraziamento a @McMCCRU per il repository originale rtl8188gu , che ha fornito il codice sorgente e il supporto iniziale per versioni precedenti come Ubuntu 20.04.
-Senza il loro lavoro iniziale di reverse engineering e pulizia del codice Realtek, non sarebbe stato possibile estendere il supporto per questa chiavetta Wi-Fi alle attuali versioni di Debian.
+Thanks to @McMCCRU for the original rtl8188gu repository, which provided the source code and initial support for older releases such as Ubuntu 20.04.
+Without their initial work reverse engineering and cleaning the Realtek code, it would not have been possible to extend support for this Wi-Fi dongle to current Debian releases.
 
-Ulteriori attività di compatibilità del kernel e test su Debian 13:
+Further kernel compatibility work and testing on Debian 13:
 
 Gianluigi Rosas
 
-Piattaforma di test:
+Test Platform:
 
 Debian GNU/Linux 13.7 — Linux 6.12.107
 
-Chiavetta UNICO WA2763 chip Realtek Semiconductor Corp. Adattatore WLAN RTL8188GU 802.11n
+UNICO WA2763 chip Realtek Semiconductor Corp. RTL8188GU 802.11n WLAN adapter
 
 
 <img width="300" height="638" alt="Unicowa2763" src="https://github.com/user-attachments/assets/cbe73a20-87c3-43ba-82c0-2c668a5c70e1" />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
