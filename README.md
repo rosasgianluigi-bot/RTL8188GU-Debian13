@@ -278,6 +278,7 @@ Se vedi la riga 8188gu, cancellala, salva ( CTRL+O, Enter), ed esci ( CTRL+X).
 Crea un nuovo file di servizio in Systemd:
 
 sudo nano /etc/systemd/system/rtl8188gu-restart.service
+
 Incolla il seguente blocco di configurazione all'interno:
 
 [Unit]
@@ -287,13 +288,13 @@ After=multi-user.target usb-modeswitch.service
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-# 1. Remove the module to avoid conflicts and zombie states
+# 1. Rimuove il modulo per evitare conflitti
 ExecStartPre=/sbin/modprobe -r 8188gu
-# 2. Soft reset the USB device (Disable and re-enable authorization)
+# 2. Reset software della periferica USB (Disabilita e riabilita l'autorizzazione del dispositivo)
 ExecStartPre=/bin/sh -c 'for dev in /sys/bus/usb/devices/*; do if [ -f "$dev/idVendor" ] && [ "$(cat $dev/idVendor)" = "0bda" ] && [ "$(cat $dev/idProduct)" = "b711" ]; then echo 0 > "$dev/authorized"; /bin/sleep 2; echo 1 > "$dev/authorized"; fi; done'
-# 3. Wait for USB bus reactivation
+# 3. Attende la riattivazione del bus prima di caricare il modulo
 ExecStartPre=/bin/sleep 2
-# 4. Load final driver
+# 4. Carica il driver definitivo
 ExecStart=/sbin/modprobe 8188gu
 
 [Install]
@@ -304,9 +305,12 @@ Salva il file ( CTRL+O, Enter) ed esci ( CTRL+X).
 3. Abilita il servizio
 Informa Systemd della modifica e abilita il servizio in modo che si avvii automaticamente ogni volta che il computer viene acceso:
 
+dal terminale:
+
 sudo systemctl daemon-reload
 
 sudo systemctl enable rtl8188gu-restart.service
+
 Fatto! Al successivo riavvio, la chiavetta Unico/Realtek verrà ripristinata tramite software e l'interfaccia Wi-Fi sarà attiva e pronta all'uso fin dall'avvio, indipendentemente dalla porta USB in cui è inserita.
 
 Compatibilità del kernel
