@@ -42,7 +42,6 @@ The resulting kernel module is:
 
 The adapter can be detected as an RTL8710B/RTL8188GU device and can create a wireless network interface.
 
-<<<<<<< HEAD
 The wireless interface was created successfully during testing.
 
 Depending on kernel configuration and driver priority, the device may be handled by the in-tree rtl8xxxu driver or by the compiled 8188gu module.
@@ -50,7 +49,6 @@ Depending on kernel configuration and driver priority, the device may be handled
 During testing, a working wireless connection was verified using NetworkManager. Available kernel logs do not indicate that this connection was managed exclusively by the custom 8188gu module.
 
 During testing, a working wireless connection was verified using NetworkManager. Available kernel logs do not indicate that this connection was managed exclusively by the custom 8188gu module.
-
 
 Interface Example:
 
@@ -72,7 +70,6 @@ CONFIG_RTW_SW_LED is enabled in the driver configuration.
 
 The LED framework has been successfully initialized.
 
-<<<<<<< HEAD
 The driver code calls SwLedOn_8710BU() and SwLedOff_8710BU(), but in the current RTL8710B USB implementation these functions only update the internal LED state (bLedOn) and do not perform direct hardware writes to the LED registers/GPIOs.
 
 Therefore:
