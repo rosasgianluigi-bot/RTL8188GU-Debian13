@@ -1,4 +1,3 @@
-<img width="505" height="47" alt="nmcli device" src="https://github.com/user-attachments/assets/a957cbb7-bc5a-4bbd-8977-9c9539d2a0c0" />
 Wi-Fi USB RTL8188GU / RTL8710BU su Debian 13
 
 I driver Linux funzionano per l'adattatore Wi-Fi USB Realtek RTL8188GU / RTL8710BU con ID USB:
@@ -44,7 +43,13 @@ Durante i test è stata verificata una connessione wireless funzionante tramite 
 Esempio di interfaccia:
 
 wlxXXXXXXXXXXXX
+
 <img width="505" height="47" alt="nmcli device" src="https://github.com/user-attachments/assets/b7d25f36-914c-4b66-a417-7ed3cdfa4f91" />
+
+
+
+
+
 
 
 
