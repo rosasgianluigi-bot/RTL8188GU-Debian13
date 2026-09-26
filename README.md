@@ -1,10 +1,12 @@
-# RTL8188GU / RTL8710BU USB Wi-Fi on Debian 13
-
 RTL8188GU / RTL8710BU USB Wi-Fi on Debian 13
+
+The configuration was tested on Debian 13 with the Debian 6.12 kernel series.
 
 The Linux drivers work for the Realtek RTL8188GU / RTL8710BU USB Wi-Fi adapter with USB ID:
 
-0BDA:B711
+On the tested system, the adapter was successfully initialized by the Linux kernel
+USB Wi-Fi driver stack. The device can be handled by the in-tree rtl8xxxu driver
+or by the compiled 8188gu module depending on kernel configuration and driver priority.
 
 This repository documents a working configuration tested on Debian 13 with the Debian 6.12 series kernel.
 
@@ -40,7 +42,15 @@ The resulting kernel module is:
 
 The adapter can be detected as an RTL8710B/RTL8188GU device and can create a wireless network interface.
 
+<<<<<<< HEAD
+The wireless interface was created successfully during testing.
+
+Depending on kernel configuration and driver priority, the device may be handled by the in-tree rtl8xxxu driver or by the compiled 8188gu module.
+
 During testing, a working wireless connection was verified using NetworkManager. Available kernel logs do not indicate that this connection was managed exclusively by the custom 8188gu module.
+
+During testing, a working wireless connection was verified using NetworkManager. Available kernel logs do not indicate that this connection was managed exclusively by the custom 8188gu module.
+
 
 Interface Example:
 
@@ -61,6 +71,25 @@ The analysis of the determining factors revealed the following:
 CONFIG_RTW_SW_LED is enabled in the driver configuration.
 
 The LED framework has been successfully initialized.
+
+<<<<<<< HEAD
+The driver code calls SwLedOn_8710BU() and SwLedOff_8710BU(), but in the current RTL8710B USB implementation these functions only update the internal LED state (bLedOn) and do not perform direct hardware writes to the LED registers/GPIOs.
+
+Therefore:
+
+a missing solid-state LED;
+
+a missing blinking LED during traffic;
+
+no LED activity after connection.
+
+This should not be considered evidence of a driver or hardware failure.
+
+The adapter can be fully detected, managed by the driver, connected to a WiFi network, and function normally without any visible LED indication.
+
+Use the lsusb, iw dev, ip link, and NetworkManager commands to verify operation.
+
+Original Project
 
 The compilation calls SwLedOn_8710BU() and SwLedOff_8710BU(), but does not write it.
 
@@ -118,7 +147,13 @@ info->head info->head_length info->tail info->tail_length
 
 To:
 
-info->beacon.head info->beacon.head_len info->beacon.tail info->beacon.tail_len 2. cfg80211_rtw_set_monitor_channel
+info->beacon.head
+info->beacon.head_len
+info->beacon.tail
+info->beacon.tail_len
+
+2. cfg80211_rtw_set_monitor_channel
+
 
 The current kernel API requires the network device parameter:
 
@@ -150,9 +185,10 @@ Fixed the build for Debian 13 kernel 6.12.
 
 The USB driver shutdown callback function has been updated from:
 
+
 .usbdrv.drvwrap.driver.shutdown = rtw_dev_shutdown,
 
-A:
+To:
 
 .usbdrv.driver.shutdown = rtw_dev_shutdown,
 
@@ -204,11 +240,18 @@ lsusb -t Check Wireless Interface
 
 List wireless interfaces:
 
+iw dev
+
+O:
+
+ip link
+
 IW development
 
 O:
 
 IP ​​link
+
 
 Once the adapter has been successfully initialized, a wireless interface should appear.
 
@@ -218,7 +261,7 @@ wlxXXXXXXXXXXXX NetworkManager
 
 If NetworkManager is installed, available Wi-Fi networks can be listed with:
 
-nmcli Wi-Fi Device List
+nmcli device wifi list
 
 To connect:
 
@@ -268,6 +311,68 @@ A dark LED does not necessarily mean the adapter is not working.
 
 Always check the actual USB port enumeration, kernel driver, wireless interface, and network connection.
 
+<<<<<<< HEAD
+Troubleshooting: USB initialization problems after reboot
+
+Before creating custom reset services, verify USB authorization and USB security tools.
+
+On modern systems such as Debian 13 (Kernel 6.12+), a synchronization problem may occur at boot: the USB stick is correctly detected by lsusb (ID 0bda:b711), but the Wi-Fi network interface (wlx...) does not appear in ip link unless you physically unplug and replug the device.
+
+USB authorization can be affected by USBGuard, kernel parameters,
+udev rules, or system security policies.
+
+Check:
+
+systemctl status usbguard
+
+If USBGuard is not required, it can be disabled:
+
+sudo systemctl disable --now usbguard
+
+Verify:
+
+systemctl is-enabled usbguard
+systemctl is-active usbguard
+
+
+### USB authorization verification
+
+If lsusb detects the adapter but no wireless interface appears:
+
+Check:
+
+cat /sys/bus/usb/devices/<device>/authorized
+
+If the result is:
+
+0
+
+the USB device is detected but not authorized.
+
+Enable it with:
+
+echo 1 | sudo tee /sys/bus/usb/devices/<device>/authorized
+
+After authorization, the wireless interface should appear.
+
+Example:
+
+cat /sys/bus/usb/devices/<device>/authorized
+
+returns:
+
+0
+
+After authorization:
+
+echo 1 | sudo tee /sys/bus/usb/devices/<device>/authorized
+
+the wireless interface appears.
+
+If the problem persists after checking USB authorization settings, a systemd reset service can be used to automatically reinitialize the adapter during boot.
+The exact cause may depend on USB controller timing, device firmware initialization,
+or system USB authorization policies.
+
 Troubleshooting: USB stick not detected on reboot (boot race condition)
 
 On modern systems such as Debian 13 (Kernel 6.12+), a synchronization problem may occur at boot: the USB stick is correctly detected by lsusb (ID 0bda:b711), but the Wi-Fi network interface (wlx...) does not appear in ip link unless you physically unplug and replug the device.
@@ -299,6 +404,10 @@ From the terminal:
 sudo systemctl daemon-reload
 
 sudo systemctl enable rtl8188gu-restart.service
+
+<<<<<<< HEAD
+After the next reboot, the Unico/Realtek dongle will be reinitialized by the service,
+and the Wi-Fi interface should become available automatically.
 
 Done! Upon the next reboot, the Unico/Realtek dongle will be soft-reset, and the Wi-Fi interface will be active and ready for use right from the start, regardless of the USB port it's plugged into.
 
