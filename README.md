@@ -279,26 +279,7 @@ Crea un nuovo file di servizio in Systemd:
 
 sudo nano /etc/systemd/system/rtl8188gu-restart.service
 
-Incolla il seguente blocco di configurazione all'interno:
-
-[Unit]
-Description=Force Hardware Reset and Load RTL8188GU
-After=multi-user.target usb-modeswitch.service
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-# 1. Rimuove il modulo per evitare conflitti
-ExecStartPre=/sbin/modprobe -r 8188gu
-# 2. Reset software della periferica USB (Disabilita e riabilita l'autorizzazione del dispositivo)
-ExecStartPre=/bin/sh -c 'for dev in /sys/bus/usb/devices/*; do if [ -f "$dev/idVendor" ] && [ "$(cat $dev/idVendor)" = "0bda" ] && [ "$(cat $dev/idProduct)" = "b711" ]; then echo 0 > "$dev/authorized"; /bin/sleep 2; echo 1 > "$dev/authorized"; fi; done'
-# 3. Attende la riattivazione del bus prima di caricare il modulo
-ExecStartPre=/bin/sleep 2
-# 4. Carica il driver definitivo
-ExecStart=/sbin/modprobe 8188gu
-
-[Install]
-WantedBy=multi-user.target
+<img width="1168" height="315" alt="riavvio" src="https://github.com/user-attachments/assets/94b8a9df-e50e-4dc1-8ed7-a067256eb5f6" />
 
 Salva il file ( CTRL+O, Enter) ed esci ( CTRL+X).
 
