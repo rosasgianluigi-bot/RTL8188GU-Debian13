@@ -64,6 +64,27 @@ The adapter may operate correctly even when its physical blue LED is not illumin
 
 Therefore, LED activity must not be used as the only indication that the Wi-Fi adapter is working.
 
+## LED status note
+
+The RTL8188GU USB adapter can operate correctly even when no LED activity is visible.
+
+During driver analysis it was found that:
+
+- `CONFIG_RTW_SW_LED` is enabled in the driver configuration.
+- The LED framework is initialized correctly.
+- The driver calls `SwLedOn_8710BU()` and `SwLedOff_8710BU()`.
+- However, in the current RTL8710B USB implementation these functions only update the internal LED state (`bLedOn`) and do not perform hardware LED register/GPIO writes.
+
+Therefore:
+
+- a missing solid LED;
+- a missing blinking LED during traffic;
+- no LED activity after connection
+
+must **not** be considered evidence of a driver or hardware failure by itself.
+
+The adapter can be fully detected, managed by the driver, connected to a WiFi network and work normally without any visible LED indication.
+
 Use lsusb, iw dev, ip link and NetworkManager to verify operation.
 
 Original Project
